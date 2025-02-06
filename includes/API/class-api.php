@@ -32,7 +32,7 @@ class BLF_API {
             // Step 3: Loop through each found link and check if it's broken
             foreach ($matches as $match) {
                 $url = $match[1]; // Extracted URL
-                $anchor_text = isset($match[2]) ? trim(strip_tags($match[2])) : ''; // Extracted anchor text
+                $anchor_text = isset($match[2]) ? trim(wp_strip_all_tags($match[2])) : ''; // Extracted anchor text
                 
                 self::check_and_insert_broken_link($url, $anchor_text, $post->ID, $post->post_title);
             }

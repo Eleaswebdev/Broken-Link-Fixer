@@ -20,13 +20,18 @@ class BLF_Admin_Settings {
     }
 
     public function register_settings() {
-        register_setting('blf_settings_group', 'blf_check_interval');
-        register_setting('blf_settings_group', 'blf_auto_replace');
+        register_setting('blf_settings_group', 'blf_check_interval', [
+            'sanitize_callback' => 'absint'
+        ]);
+        
+        register_setting('blf_settings_group', 'blf_auto_replace', [
+            'sanitize_callback' => 'sanitize_text_field'
+        ]);
 
         add_settings_section(
             'blf_main_settings',
             __('General Settings', 'broken-link-fixer'),
-            null,
+            '__return_null',
             'blf-settings'
         );
 
@@ -55,8 +60,8 @@ class BLF_Admin_Settings {
     public function auto_replace_callback() {
         $value = get_option('blf_auto_replace', 'yes');
         echo "<select name='blf_auto_replace'>
-                <option value='yes' " . selected($value, 'yes', false) . ">" . __('Yes', 'broken-link-fixer') . "</option>
-                <option value='no' " . selected($value, 'no', false) . ">" . __('No', 'broken-link-fixer') . "</option>
+                <option value='yes' " . selected($value, 'yes', false) . ">" . esc_html__('Yes', 'broken-link-fixer') . "</option>
+                <option value='no' " . selected($value, 'no', false) . ">" . esc_html__('No', 'broken-link-fixer') . "</option>
               </select>";
     }
 
@@ -67,12 +72,24 @@ class BLF_Admin_Settings {
             <h1><?php esc_html_e('Broken Link Fixer', 'broken-link-fixer'); ?></h1>
 
             <form method="post" action="">
+            <?php wp_nonce_field('blf_run_check_action', 'blf_run_check_nonce'); ?>
                 <input type="hidden" name="blf_run_check" value="1">
                 <input type="submit" value="<?php esc_attr_e('Check for Broken Links', 'broken-link-fixer'); ?>" class="button button-primary">
             </form>
 
             <?php
-            if (isset($_POST['blf_run_check'])) {
+            if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['blf_run_check'])) {
+    
+                // Check if the nonce field is set before using it
+                if (!isset($_POST['blf_run_check_nonce'])) {
+                    wp_die(__('Security check failed. Nonce is missing.', 'broken-link-fixer'));
+                }
+            
+                // Sanitize and verify nonce
+                $nonce = sanitize_text_field(wp_unslash($_POST['blf_run_check_nonce']));
+                if (!wp_verify_nonce($nonce, 'blf_run_check_action')) {
+                    wp_die(__('Security check failed. Invalid nonce.', 'broken-link-fixer'));
+                }
                 BLF_API::scan_site_for_broken_links();
                 echo '<p>' . esc_html__('Broken link check completed!', 'broken-link-fixer') . '</p>';
             }
@@ -85,7 +102,7 @@ class BLF_Admin_Settings {
             $broken_links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}blf_broken_links WHERE status = 'broken'");
 
             if ($broken_links) {
-                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
                 echo '<input type="hidden" name="action" value="bulk_unlink_broken_links">';
                 echo '<table class="widefat fixed">';
                 echo '<thead>';
