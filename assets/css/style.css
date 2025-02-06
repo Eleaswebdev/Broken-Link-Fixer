@@ -1,0 +1,10 @@
+.button-bulk-unlink {
+    margin-top: 20px !important;
+}
+#select_all {
+    margin: 0 !important;
+}
+.not-found {
+    color: red !important;
+    font-weight: 700;
+}

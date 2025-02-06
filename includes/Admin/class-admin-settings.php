@@ -4,6 +4,8 @@ class BLF_Admin_Settings {
     public function __construct() {
         add_action("admin_menu", array( $this,"add_admin_menu") );
         add_action("admin_init", array( $this,"register_settings") );
+        add_action('admin_post_unlink_broken_link', [$this, 'handle_single_unlink']);
+        add_action('admin_post_bulk_unlink_broken_links', [$this, 'handle_bulk_unlink']);
     }
 
     public function add_admin_menu() {
@@ -64,67 +66,67 @@ class BLF_Admin_Settings {
         <div class="wrap">
             <h1><?php esc_html_e('Broken Link Fixer Settings', 'broken-link-fixer'); ?></h1>
 
-        <form method="post" action="">
-            <input type="hidden" name="blf_run_check" value="1">
-            <input type="submit" value="<?php esc_attr_e('Check for Broken Links', 'broken-link-fixer'); ?>" class="button button-primary">
-        </form>
-
-        <?php
-        if (isset($_POST['blf_run_check'])) {
-            // Trigger the broken link check
-            BLF_API::scan_site_for_broken_links();
-            echo '<p>' . esc_html__('Broken link check completed!', 'broken-link-fixer') . '</p>';
-        }
-        ?>
-    </div>
-            
-            <form method="post" action="options.php">
-                <?php
-                // settings_fields('blf_settings_group');
-                // do_settings_sections('blf-settings');
-                // submit_button();
-                ?>
+            <form method="post" action="">
+                <input type="hidden" name="blf_run_check" value="1">
+                <input type="submit" value="<?php esc_attr_e('Check for Broken Links', 'broken-link-fixer'); ?>" class="button button-primary">
             </form>
-    
+
+            <?php
+            if (isset($_POST['blf_run_check'])) {
+                BLF_API::scan_site_for_broken_links();
+                echo '<p>' . esc_html__('Broken link check completed!', 'broken-link-fixer') . '</p>';
+            }
+            ?>
+
             <h2><?php esc_html_e('Broken Links', 'broken-link-fixer'); ?></h2>
-            
+
             <?php
             // Query broken links from the database
             $broken_links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}blf_broken_links WHERE status = 'broken'");
-    
-            // Check if there are broken links
+
             if ($broken_links) {
-                echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-                echo '<table class="widefat fixed" cellspacing="0">';
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                echo '<input type="hidden" name="action" value="bulk_unlink_broken_links">';
+                echo '<table class="widefat fixed">';
                 echo '<thead>';
                 echo '<tr>';
-                echo '<th><input type="checkbox" id="select_all" /></th>'; // Select All checkbox
-                echo '<th>' . esc_html__('ID', 'broken-link-fixer') . '</th>';
-                echo '<th>' . esc_html__('URL', 'broken-link-fixer') . '</th>';
+                echo '<th><input type="checkbox" id="select_all"></th>';
+                echo '<th>' . esc_html__('Broken URL', 'broken-link-fixer') . '</th>';
+                echo '<th>' . esc_html__('Broken Text', 'broken-link-fixer') . '</th>';
+                echo '<th>' . esc_html__('Source', 'broken-link-fixer') . '</th>';
                 echo '<th>' . esc_html__('Last Checked', 'broken-link-fixer') . '</th>';
                 echo '<th>' . esc_html__('Status', 'broken-link-fixer') . '</th>';
-                echo '<th>' . esc_html__('Action', 'broken-link-fixer') . '</th>'; // Unlink column
+                echo '<th>' . esc_html__('Actions', 'broken-link-fixer') . '</th>';
                 echo '</tr>';
                 echo '</thead>';
                 echo '<tbody>';
-                
-                // Display each broken link
+
                 foreach ($broken_links as $link) {
+                    $post = BLF_API::find_post_by_broken_link($link->url);
+                    $broken_text = BLF_API::find_broken_text($post->ID, $link->url);
                     echo '<tr>';
-                    echo '<td><input type="checkbox" name="select_links[]" value="' . esc_attr($link->id) . '" /></td>';
-                    echo '<td>' . esc_html($link->id) . '</td>';
+                    echo '<td><input type="checkbox" class="link_checkbox" name="link_urls[]" value="' . esc_attr($link->url) . '"></td>';
                     echo '<td><a href="' . esc_url($link->url) . '" target="_blank">' . esc_url($link->url) . '</a></td>';
+                    // Display broken text
+                    echo '<td>' . (!empty($broken_text) ? esc_html($broken_text) : esc_html__('N/A', 'broken-link-fixer')) . '</td>';
+
+                    // Display source (Post/Page title with edit link)
+                    if ($post) {
+                        echo '<td><a href="' . esc_url(get_edit_post_link($post->ID)) . '" target="_blank">' . esc_html($post->post_title) . '</a></td>';
+                    } else {
+                        echo '<td>' . esc_html__('Unknown', 'broken-link-fixer') . '</td>';
+                    }
                     echo '<td>' . esc_html($link->last_checked) . '</td>';
-                    echo '<td>' . esc_html($link->status) . '</td>';
-                    echo '<td><a href="' . esc_url(admin_url('admin-post.php?action=blf_unlink_link&link_id=' . $link->id)) . '" class="button button-secondary">Unlink</a></td>';
+                    echo '<td class="not-found">' . esc_html('404 Not Found') . '</td>';
+                    echo '<td>';
+                    echo '<a href="' . esc_url(admin_url('admin-post.php?action=unlink_broken_link&url=' . urlencode($link->url))) . '" class="button">' . esc_html__('Unlink', 'broken-link-fixer') . '</a>';
+                    echo '</td>';
                     echo '</tr>';
                 }
-                
+
                 echo '</tbody>';
                 echo '</table>';
-                
-                // Bulk Unlink Button
-                echo '<p><input type="submit" name="bulk_unlink" value="Bulk Unlink" class="button button-primary" /></p>';
+                echo '<input type="submit" name="bulk_unlink" value="' . esc_attr__('Bulk Unlink', 'broken-link-fixer') . '" class="button button-secondary button-bulk-unlink">';
                 echo '</form>';
             } else {
                 echo '<p>' . esc_html__('No broken links found.', 'broken-link-fixer') . '</p>';
@@ -132,6 +134,27 @@ class BLF_Admin_Settings {
             ?>
         </div>
         <?php
+    }
+
+    // Handle Unlink (single) request
+    public function handle_single_unlink() {
+        if (isset($_GET['url'])) {
+            $url = urldecode($_GET['url']);
+            BLF_API::unlink_broken_link($url);
+            wp_redirect(admin_url('admin.php?page=broken-link-fixer'));
+            exit;
+        }
+    }
+
+    // Handle bulk unlink request
+    public function handle_bulk_unlink() {
+        if (isset($_POST['link_urls']) && is_array($_POST['link_urls'])) {
+            foreach ($_POST['link_urls'] as $url) {
+                BLF_API::unlink_broken_link(urldecode($url));
+            }
+        }
+        wp_redirect(admin_url('admin.php?page=broken-link-fixer'));
+        exit;
     }
     
 }

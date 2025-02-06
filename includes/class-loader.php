@@ -8,10 +8,10 @@ class BLF_Loader {
 
         require_once BLF_PLUGIN_DIR . 'includes/Admin/class-admin-settings.php';
 
-        require_once BLF_PLUGIN_DIR . 'includes/Frontend/class-frontend.php';
+        require_once BLF_PLUGIN_DIR . 'includes/Assets/class-assets.php';
         require_once BLF_PLUGIN_DIR . 'includes/API/class-api.php';
 
         new BLF_Admin_Settings();
-        new BLF_Frontend();
+        new BLF_Assets();
     }
 }
