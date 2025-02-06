@@ -64,7 +64,7 @@ class BLF_Admin_Settings {
         global $wpdb;
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e('Broken Link Fixer Settings', 'broken-link-fixer'); ?></h1>
+            <h1><?php esc_html_e('Broken Link Fixer', 'broken-link-fixer'); ?></h1>
 
             <form method="post" action="">
                 <input type="hidden" name="blf_run_check" value="1">
