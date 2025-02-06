@@ -3,10 +3,12 @@
 class BLF_API {
     public static function scan_site_for_broken_links() {
         global $wpdb;
+
+        $post_types = get_post_types(['public' => true], 'names');
         
         // Step 1: Get all posts, pages, and custom post types
         $posts = get_posts([
-            'post_type'      => ['post', 'page', 'custom_post_type'], // Add your custom post types here
+            'post_type'      => $post_types,
             'posts_per_page' => -1, // Get all posts/pages
             'post_status'    => 'publish' // Only get published posts/pages
         ]);
@@ -117,10 +119,11 @@ class BLF_API {
 
     public static function unlink_broken_link($url) {
         global $wpdb;
+        $post_types = get_post_types(['public' => true], 'names');
     
         // Get all posts/pages containing the broken link
         $posts = get_posts([
-            'post_type'      => ['post', 'page', 'custom_post_type'], // Add custom post types if needed
+            'post_type'      => $post_types,
             'posts_per_page' => -1,
             'post_status'    => 'publish',
             's'              => $url, // Search for the broken link in content
