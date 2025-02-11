@@ -82,13 +82,13 @@ class BLF_Admin_Settings {
     
                 // Check if the nonce field is set before using it
                 if (!isset($_POST['blf_run_check_nonce'])) {
-                    wp_die(__('Security check failed. Nonce is missing.', 'broken-link-fixer'));
+                    wp_die(esc_html__('Security check failed. Nonce is missing.', 'broken-link-fixer'));
                 }
             
                 // Sanitize and verify nonce
                 $nonce = sanitize_text_field(wp_unslash($_POST['blf_run_check_nonce']));
                 if (!wp_verify_nonce($nonce, 'blf_run_check_action')) {
-                    wp_die(__('Security check failed. Invalid nonce.', 'broken-link-fixer'));
+                    wp_die(esc_html__('Security check failed. Invalid nonce.', 'broken-link-fixer'));
                 }
                 BLF_API::scan_site_for_broken_links();
                 echo '<p>' . esc_html__('Broken link check completed!', 'broken-link-fixer') . '</p>';
