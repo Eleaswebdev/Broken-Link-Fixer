@@ -1,6 +1,6 @@
 === Broken Link Fixer ===
 Contributors: eleaswp
-Tags: broken links, link fixer, 404 fixer, SEO, elementor, wordpress, custom post types  
+Tags: broken links, link fixer, 404 fixer, SEO, elementor
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.0
