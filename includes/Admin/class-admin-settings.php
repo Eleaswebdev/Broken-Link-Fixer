@@ -1,6 +1,6 @@
 <?php
 
-class BLF_Admin_Settings {
+class BROKLIFI_Admin_Settings {
     public function __construct() {
         add_action("admin_menu", array( $this,"add_admin_menu") );
         add_action("admin_init", array( $this,"register_settings") );
@@ -20,46 +20,46 @@ class BLF_Admin_Settings {
     }
 
     public function register_settings() {
-        register_setting('blf_settings_group', 'blf_check_interval', [
+        register_setting('broklifi_settings_group', 'broklifi_check_interval', [
             'sanitize_callback' => 'absint'
         ]);
         
-        register_setting('blf_settings_group', 'blf_auto_replace', [
+        register_setting('broklifi_settings_group', 'broklifi_auto_replace', [
             'sanitize_callback' => 'sanitize_text_field'
         ]);
 
         add_settings_section(
-            'blf_main_settings',
+            'broklifi_main_settings',
             __('General Settings', 'broken-link-fixer'),
             '__return_null',
-            'blf-settings'
+            'broklifi-settings'
         );
 
         add_settings_field(
-            'blf_check_interval',
+            'broklifi_check_interval',
             __('Check Interval (hours)', 'broken-link-fixer'),
             [$this, 'check_interval_callback'],
-            'blf-settings',
-            'blf_main_settings'
+            'broklifi-settings',
+            'broklifi_main_settings'
         );
 
         add_settings_field(
-            'blf_auto_replace',
+            'broklifi_auto_replace',
             __('Auto-Replace Broken Links', 'broken-link-fixer'),
             [$this, 'auto_replace_callback'],
-            'blf-settings',
-            'blf_main_settings'
+            'broklifi-settings',
+            'broklifi_main_settings'
         );
     }
 
     public function check_interval_callback() {
-        $value = get_option('blf_check_interval', 24);
-        echo "<input type='number' name='blf_check_interval' value='" . esc_attr($value) . "' min='1' />";
+        $value = get_option('broklifi_check_interval', 24);
+        echo "<input type='number' name='broklifi_check_interval' value='" . esc_attr($value) . "' min='1' />";
     }
 
     public function auto_replace_callback() {
-        $value = get_option('blf_auto_replace', 'yes');
-        echo "<select name='blf_auto_replace'>
+        $value = get_option('broklifi_auto_replace', 'yes');
+        echo "<select name='broklifi_auto_replace'>
                 <option value='yes' " . selected($value, 'yes', false) . ">" . esc_html__('Yes', 'broken-link-fixer') . "</option>
                 <option value='no' " . selected($value, 'no', false) . ">" . esc_html__('No', 'broken-link-fixer') . "</option>
               </select>";
@@ -72,25 +72,25 @@ class BLF_Admin_Settings {
             <h1><?php esc_html_e('Broken Link Fixer', 'broken-link-fixer'); ?></h1>
 
             <form method="post" action="">
-            <?php wp_nonce_field('blf_run_check_action', 'blf_run_check_nonce'); ?>
-                <input type="hidden" name="blf_run_check" value="1">
+            <?php wp_nonce_field('broklifi_run_check_action', 'broklifi_run_check_nonce'); ?>
+                <input type="hidden" name="broklifi_run_check" value="1">
                 <input type="submit" value="<?php esc_attr_e('Check for Broken Links', 'broken-link-fixer'); ?>" class="button button-primary">
             </form>
 
             <?php
-            if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['blf_run_check'])) {
+            if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['broklifi_run_check'])) {
     
                 // Check if the nonce field is set before using it
-                if (!isset($_POST['blf_run_check_nonce'])) {
+                if (!isset($_POST['broklifi_run_check_nonce'])) {
                     wp_die(esc_html__('Security check failed. Nonce is missing.', 'broken-link-fixer'));
                 }
             
                 // Sanitize and verify nonce
-                $nonce = sanitize_text_field(wp_unslash($_POST['blf_run_check_nonce']));
-                if (!wp_verify_nonce($nonce, 'blf_run_check_action')) {
+                $nonce = sanitize_text_field(wp_unslash($_POST['broklifi_run_check_nonce']));
+                if (!wp_verify_nonce($nonce, 'broklifi_run_check_action')) {
                     wp_die(esc_html__('Security check failed. Invalid nonce.', 'broken-link-fixer'));
                 }
-                BLF_API::scan_site_for_broken_links();
+                BROKLIFI_API::scan_site_for_broken_links();
                 echo '<p>' . esc_html__('Broken link check completed!', 'broken-link-fixer') . '</p>';
             }
             ?>
@@ -99,7 +99,7 @@ class BLF_Admin_Settings {
 
             <?php
             // Query broken links from the database
-            $broken_links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}blf_broken_links WHERE status = 'broken'");
+            $broken_links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}broklifi_broken_links WHERE status = 'broken'");
 
             if ($broken_links) {
                 echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -119,8 +119,8 @@ class BLF_Admin_Settings {
                 echo '<tbody>';
 
                 foreach ($broken_links as $link) {
-                    $post = BLF_API::find_post_by_broken_link($link->url);
-                    $broken_text = BLF_API::find_broken_text($post->ID, $link->url);
+                    $post = BROKLIFI_API::find_post_by_broken_link($link->url);
+                    $broken_text = BROKLIFI_API::find_broken_text($post->ID, $link->url);
                     echo '<tr>';
                     echo '<td><input type="checkbox" class="link_checkbox" name="link_urls[]" value="' . esc_attr($link->url) . '"></td>';
                     echo '<td><a href="' . esc_url($link->url) . '" target="_blank">' . esc_url($link->url) . '</a></td>';
@@ -157,7 +157,7 @@ class BLF_Admin_Settings {
     public function handle_single_unlink() {
         if (isset($_GET['url'])) {
             $url = urldecode($_GET['url']);
-            BLF_API::unlink_broken_link($url);
+            BROKLIFI_API::unlink_broken_link($url);
             wp_redirect(admin_url('admin.php?page=broken-link-fixer'));
             exit;
         }
@@ -166,10 +166,12 @@ class BLF_Admin_Settings {
     // Handle bulk unlink request
     public function handle_bulk_unlink() {
         if (isset($_POST['link_urls']) && is_array($_POST['link_urls'])) {
-            foreach ($_POST['link_urls'] as $url) {
-                BLF_API::unlink_broken_link(urldecode($url));
+            $link_urls = wp_unslash(esc_url_raw($_POST['link_urls'])); // Unslash before processing
+            foreach ($link_urls as $url) {
+                $url = esc_url_raw(urldecode($url)); // Sanitize URL
+                BROKLIFI_API::unlink_broken_link($url);
             }
-        }
+        }               
         wp_redirect(admin_url('admin.php?page=broken-link-fixer'));
         exit;
     }

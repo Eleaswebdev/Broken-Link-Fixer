@@ -1,5 +1,5 @@
 === Broken Link Fixer ===
-Contributors: eleaswp
+Contributors: eleaswp,whizplugins
 Tags: broken links, link fixer, 404 fixer, SEO, elementor
 Requires at least: 5.0
 Tested up to: 6.7

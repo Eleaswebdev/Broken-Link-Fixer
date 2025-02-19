@@ -1,6 +1,6 @@
 <?php
 
-class BLF_Deactivator {
+class BROKLIFI_Deactivator {
     public static function deactivate() {
         
     }

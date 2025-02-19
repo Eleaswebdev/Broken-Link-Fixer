@@ -1,6 +1,6 @@
 <?php
 
-class BLF_API {
+class BROKLIFI_API {
     public static function scan_site_for_broken_links() {
         global $wpdb;
 
@@ -80,7 +80,7 @@ class BLF_API {
     
         // Check if the link already exists in the database
         $existing_link = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}blf_broken_links WHERE url = %s",
+            "SELECT * FROM {$wpdb->prefix}broklifi_broken_links WHERE url = %s",
             $url
         ));
     
@@ -92,7 +92,7 @@ class BLF_API {
         if ($existing_link) {
             // Update the link if it already exists
             $wpdb->update(
-                "{$wpdb->prefix}blf_broken_links",
+                "{$wpdb->prefix}broklifi_broken_links",
                 [
                     'status'       => $status,
                     'last_checked' => current_time('mysql'),
@@ -104,7 +104,7 @@ class BLF_API {
         } else {
             // Insert the broken link if it doesn't exist
             $wpdb->insert(
-                "{$wpdb->prefix}blf_broken_links",
+                "{$wpdb->prefix}broklifi_broken_links",
                 [
                     'url'          => $url,
                     'status'       => $status,
@@ -149,7 +149,7 @@ class BLF_API {
             }
         }
           // Delete the broken link from the database
-          $wpdb->delete("{$wpdb->prefix}blf_broken_links", ['url' => $url]);
+          $wpdb->delete("{$wpdb->prefix}broklifi_broken_links", ['url' => $url]);
     }
 
     public static function find_post_by_broken_link($url) {

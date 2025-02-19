@@ -1,9 +1,9 @@
 <?php
 
-class BLF_Database_Handler {
+class BROKLIFI_Database_Handler {
     public static function create_tables() {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'blf_broken_links';
+        $table_name = $wpdb->prefix . 'broklifi_broken_links';
         $charset_collate = $wpdb->get_charset_collate();
 
         // Check if the table already exists
