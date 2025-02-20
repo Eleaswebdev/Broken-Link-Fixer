@@ -166,7 +166,7 @@ class BROKLIFI_Admin_Settings {
     // Handle bulk unlink request
     public function handle_bulk_unlink() {
         if (isset($_POST['link_urls']) && is_array($_POST['link_urls'])) {
-            $link_urls = wp_unslash($_POST['link_urls']); // Unslash before processing
+            $link_urls = wp_unslash(esc_url_raw($_POST['link_urls'])); // Unslash before processing
             foreach ($link_urls as $url) {
                 $url = esc_url_raw(urldecode($url)); // Sanitize URL
                 BROKLIFI_API::unlink_broken_link($url);
